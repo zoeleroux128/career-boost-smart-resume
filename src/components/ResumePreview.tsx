@@ -10,6 +10,7 @@ import ModernTemplate from './templates/ModernTemplate';
 import ClassicTemplate from './templates/ClassicTemplate';
 import CreativeTemplate from './templates/CreativeTemplate';
 import ATSAnalyzer from './ATSAnalyzer';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 
 interface ResumePreviewProps {
   resumeData: ResumeData;
@@ -51,6 +52,251 @@ const ResumePreview = ({ resumeData, onBack, onEdit }: ResumePreviewProps) => {
     }
   };
 
+  const exportToDOCX = async () => {
+    const { personal, summary, experience, education, skills } = resumeData;
+    
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          // Header with name
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: personal.fullName,
+                bold: true,
+                size: 32,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+          }),
+          
+          // Contact info
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: [
+                  personal.email,
+                  personal.phone,
+                  personal.location,
+                  personal.linkedin,
+                  personal.website
+                ].filter(Boolean).join(' | '),
+                size: 20,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
+          }),
+
+          // Summary section
+          ...(summary ? [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "PROFESSIONAL SUMMARY",
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 200, after: 200 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: summary,
+                  size: 22,
+                }),
+              ],
+              spacing: { after: 400 },
+            }),
+          ] : []),
+
+          // Experience section
+          ...(experience.length > 0 ? [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "PROFESSIONAL EXPERIENCE",
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 200, after: 200 },
+            }),
+            ...experience.flatMap(exp => [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: exp.position,
+                    bold: true,
+                    size: 22,
+                  }),
+                  new TextRun({
+                    text: ` | ${exp.company}`,
+                    size: 22,
+                  }),
+                  new TextRun({
+                    text: ` | ${exp.startDate} - ${exp.current ? 'Present' : exp.endDate}`,
+                    size: 20,
+                    italics: true,
+                  }),
+                ],
+                spacing: { after: 100 },
+              }),
+              ...(exp.description ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: exp.description,
+                      size: 20,
+                    }),
+                  ],
+                  spacing: { after: 100 },
+                }),
+              ] : []),
+              ...exp.achievements.map(achievement => 
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `• ${achievement}`,
+                      size: 20,
+                    }),
+                  ],
+                  spacing: { after: 50 },
+                })
+              ),
+              new Paragraph({
+                children: [new TextRun({ text: "", size: 20 })],
+                spacing: { after: 200 },
+              }),
+            ]),
+          ] : []),
+
+          // Education section
+          ...(education.length > 0 ? [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "EDUCATION",
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 200, after: 200 },
+            }),
+            ...education.map(edu => 
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${edu.degree} in ${edu.field}`,
+                    bold: true,
+                    size: 22,
+                  }),
+                  new TextRun({
+                    text: ` | ${edu.institution}`,
+                    size: 22,
+                  }),
+                  new TextRun({
+                    text: ` | ${edu.startDate} - ${edu.endDate}`,
+                    size: 20,
+                    italics: true,
+                  }),
+                  ...(edu.gpa ? [
+                    new TextRun({
+                      text: ` | GPA: ${edu.gpa}`,
+                      size: 20,
+                    }),
+                  ] : []),
+                ],
+                spacing: { after: 200 },
+              })
+            ),
+          ] : []),
+
+          // Skills section
+          ...(skills.technical.length > 0 || skills.soft.length > 0 || skills.languages.length > 0 ? [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "SKILLS",
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 200, after: 200 },
+            }),
+            ...(skills.technical.length > 0 ? [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "Technical Skills: ",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new TextRun({
+                    text: skills.technical.join(', '),
+                    size: 22,
+                  }),
+                ],
+                spacing: { after: 100 },
+              }),
+            ] : []),
+            ...(skills.soft.length > 0 ? [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "Core Competencies: ",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new TextRun({
+                    text: skills.soft.join(', '),
+                    size: 22,
+                  }),
+                ],
+                spacing: { after: 100 },
+              }),
+            ] : []),
+            ...(skills.languages.length > 0 ? [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "Languages: ",
+                    bold: true,
+                    size: 22,
+                  }),
+                  new TextRun({
+                    text: skills.languages.map(lang => `${lang.language} (${lang.proficiency})`).join(', '),
+                    size: 22,
+                  }),
+                ],
+                spacing: { after: 100 },
+              }),
+            ] : []),
+          ] : []),
+        ],
+      }],
+    });
+
+    try {
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${personal.fullName || 'resume'}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating DOCX:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -75,6 +321,10 @@ const ResumePreview = ({ resumeData, onBack, onEdit }: ResumePreviewProps) => {
               <Button variant="outline" onClick={exportToHTML}>
                 <FileText className="h-4 w-4 mr-2" />
                 Export HTML
+              </Button>
+              <Button variant="outline" onClick={exportToDOCX}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export DOCX
               </Button>
               <Button onClick={exportToPDF} className="bg-blue-600 hover:bg-blue-700">
                 <Download className="h-4 w-4 mr-2" />
