@@ -25,7 +25,6 @@ const steps = [
   { id: 'education', title: 'Education', component: EducationForm },
   { id: 'skills', title: 'Skills', component: SkillsForm },
   { id: 'template', title: 'Template', component: TemplateSelector },
-  { id: 'preview', title: 'Preview', component: ResumePreview },
 ];
 
 const ResumeBuilder = ({ onBack }: ResumeBuilderProps) => {

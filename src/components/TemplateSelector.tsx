@@ -13,24 +13,24 @@ interface TemplateSelectorProps {
 }
 
 const TemplateSelector = ({ data, onUpdate }: TemplateSelectorProps) => {
-  const [selectedTemplate, setSelectedTemplate] = useState(data.template);
+  const [selectedTemplate, setSelectedTemplate] = useState<'modern' | 'classic' | 'creative'>(data.template);
   const [customization, setCustomization] = useState(data.customization);
 
   const templates = [
     {
-      id: 'modern',
+      id: 'modern' as const,
       name: 'Modern',
       description: 'Clean, minimalist design with subtle colors',
       preview: 'bg-gradient-to-br from-blue-50 to-white'
     },
     {
-      id: 'classic',
+      id: 'classic' as const,
       name: 'Classic',
       description: 'Traditional format preferred by conservative industries',
       preview: 'bg-gradient-to-br from-gray-50 to-white'
     },
     {
-      id: 'creative',
+      id: 'creative' as const,
       name: 'Creative',
       description: 'Bold design for creative professionals',
       preview: 'bg-gradient-to-br from-purple-50 to-pink-50'
@@ -53,7 +53,7 @@ const TemplateSelector = ({ data, onUpdate }: TemplateSelectorProps) => {
     { name: 'Lato', value: 'Lato' }
   ];
 
-  const handleTemplateSelect = (templateId: string) => {
+  const handleTemplateSelect = (templateId: 'modern' | 'classic' | 'creative') => {
     setSelectedTemplate(templateId);
     onUpdate('template', templateId);
   };
@@ -170,7 +170,7 @@ const TemplateSelector = ({ data, onUpdate }: TemplateSelectorProps) => {
               <Label htmlFor="spacing-select" className="text-base font-medium">Spacing</Label>
               <Select 
                 value={customization.spacing} 
-                onValueChange={(value) => handleCustomizationChange('spacing', value)}
+                onValueChange={(value: 'compact' | 'normal' | 'relaxed') => handleCustomizationChange('spacing', value)}
               >
                 <SelectTrigger className="mt-2">
                   <SelectValue />
