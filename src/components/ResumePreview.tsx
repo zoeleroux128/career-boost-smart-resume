@@ -1,25 +1,31 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Download, FileText, Share, Eye } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Share, Eye, Edit, Lightbulb, Target } from 'lucide-react';
 import { ResumeData } from '@/types/resume';
 import ModernTemplate from './templates/ModernTemplate';
 import ClassicTemplate from './templates/ClassicTemplate';
 import CreativeTemplate from './templates/CreativeTemplate';
 import ATSAnalyzer from './ATSAnalyzer';
+import JobDescriptionAnalyzer from './JobDescriptionAnalyzer';
+import SmartContentSuggestions from './SmartContentSuggestions';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 
 interface ResumePreviewProps {
   resumeData: ResumeData;
   onBack: () => void;
   onEdit: (step: number) => void;
+  onUpdate?: (section: string, data: any) => void;
 }
 
-const ResumePreview = ({ resumeData, onBack, onEdit }: ResumePreviewProps) => {
+const ResumePreview = ({ resumeData, onBack, onEdit, onUpdate }: ResumePreviewProps) => {
   const [showATSAnalysis, setShowATSAnalysis] = useState(false);
+  const [showJobAnalysis, setShowJobAnalysis] = useState(false);
+  const [showSmartSuggestions, setShowSmartSuggestions] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [jobAnalysis, setJobAnalysis] = useState<any>(null);
 
   const renderTemplate = () => {
     const templateProps = { data: resumeData };
@@ -297,6 +303,32 @@ const ResumePreview = ({ resumeData, onBack, onEdit }: ResumePreviewProps) => {
     }
   };
 
+  const handleApplySuggestion = (section: string, content: string) => {
+    if (!onUpdate) return;
+    
+    switch (section) {
+      case 'summary':
+        onUpdate('summary', content);
+        break;
+      case 'skills':
+        const currentSkills = [...resumeData.skills.technical];
+        if (!currentSkills.includes(content)) {
+          currentSkills.push(content);
+          onUpdate('skills', { ...resumeData.skills, technical: currentSkills });
+        }
+        break;
+      case 'achievement':
+        // For achievements, we'd need to specify which experience entry to update
+        // This is a simplified implementation
+        console.log('Achievement suggestion:', content);
+        break;
+    }
+  };
+
+  const handleJobAnalysisSuggestions = (analysis: any) => {
+    setJobAnalysis(analysis);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -312,12 +344,34 @@ const ResumePreview = ({ resumeData, onBack, onEdit }: ResumePreviewProps) => {
             
             <div className="flex items-center space-x-3">
               <Button 
-                variant="outline"
+                variant={editMode ? "default" : "outline"}
+                onClick={() => setEditMode(!editMode)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                {editMode ? 'Exit Edit' : 'Edit Mode'}
+              </Button>
+              <Button 
+                variant={showSmartSuggestions ? "default" : "outline"}
+                onClick={() => setShowSmartSuggestions(!showSmartSuggestions)}
+              >
+                <Lightbulb className="h-4 w-4 mr-2" />
+                Smart Suggestions
+              </Button>
+              <Button 
+                variant={showJobAnalysis ? "default" : "outline"}
+                onClick={() => setShowJobAnalysis(!showJobAnalysis)}
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Job Match
+              </Button>
+              <Button 
+                variant={showATSAnalysis ? "default" : "outline"}
                 onClick={() => setShowATSAnalysis(!showATSAnalysis)}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 ATS Analysis
               </Button>
+              
               <Button variant="outline" onClick={exportToHTML}>
                 <FileText className="h-4 w-4 mr-2" />
                 Export HTML
@@ -337,15 +391,36 @@ const ResumePreview = ({ resumeData, onBack, onEdit }: ResumePreviewProps) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* ATS Analysis Sidebar */}
-          {showATSAnalysis && (
-            <div className="lg:col-span-1">
-              <ATSAnalyzer resumeData={resumeData} onEdit={onEdit} />
+          {/* Sidebar for Analysis and Suggestions */}
+          {(showATSAnalysis || showJobAnalysis || showSmartSuggestions) && (
+            <div className="lg:col-span-1 space-y-6">
+              {showATSAnalysis && (
+                <ATSAnalyzer resumeData={resumeData} onEdit={onEdit} />
+              )}
+              
+              {showJobAnalysis && (
+                <JobDescriptionAnalyzer 
+                  resumeData={resumeData} 
+                  onSuggestContent={handleJobAnalysisSuggestions}
+                />
+              )}
+              
+              {showSmartSuggestions && (
+                <SmartContentSuggestions 
+                  resumeData={resumeData}
+                  onApplySuggestion={handleApplySuggestion}
+                  jobAnalysis={jobAnalysis}
+                />
+              )}
             </div>
           )}
           
           {/* Resume Preview */}
-          <div className={showATSAnalysis ? "lg:col-span-3" : "lg:col-span-4"}>
+          <div className={
+            (showATSAnalysis || showJobAnalysis || showSmartSuggestions) 
+              ? "lg:col-span-3" 
+              : "lg:col-span-4"
+          }>
             <Card className="shadow-lg">
               <CardContent className="p-0">
                 <div 

@@ -110,6 +110,7 @@ const ResumeBuilder = ({ onBack }: ResumeBuilderProps) => {
           setShowPreview(false);
           setCurrentStep(step);
         }}
+        onUpdate={updateResumeData}
       />
     );
   }
