@@ -28,7 +28,11 @@ const ResumePreview = ({ resumeData, onBack, onEdit, onUpdate }: ResumePreviewPr
   const [jobAnalysis, setJobAnalysis] = useState<any>(null);
 
   const renderTemplate = () => {
-    const templateProps = { data: resumeData };
+    const templateProps = { 
+      data: resumeData, 
+      editMode, 
+      onUpdate: onUpdate || (() => {}) 
+    };
     
     switch (resumeData.template) {
       case 'classic':
