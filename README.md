@@ -4,13 +4,17 @@
 
 **URL**: https://lovable.dev/projects/a2602507-e3b0-4650-8092-adc23ac3e3a5
 
-## How can I edit this code?
+## How can access this link?
 
-There are several ways of editing your application.
+Click on the link below or above(project url).
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a2602507-e3b0-4650-8092-adc23ac3e3a5) and start prompting.
+Simply visit the [Lovable Project](https://lovable.dev/projects/a2602507-e3b0-4650-8092-adc23ac3e3a5), click publish and start prompting.
+
+## How to edit this code?
+
+Click on the Loveable link and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
