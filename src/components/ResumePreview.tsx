@@ -44,20 +44,111 @@ const ResumePreview = ({ resumeData, onBack, onEdit, onUpdate }: ResumePreviewPr
     }
   };
 
-  const exportToPDF = () => {
-    window.print();
+  const exportToPDF = async () => {
+    try {
+      // Create a new window with the resume content
+      const resumeElement = document.getElementById('resume-content');
+      if (!resumeElement) return;
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+
+      // Create HTML content for PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${resumeData.personal.fullName || 'Resume'}</title>
+          <style>
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              font-family: ${resumeData.customization.font}, Arial, sans-serif;
+              background: white;
+            }
+            .resume-content {
+              max-width: 8.5in;
+              margin: 0 auto;
+              background: white;
+            }
+            @media print {
+              body { margin: 0; padding: 0; }
+              .resume-content { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="resume-content">
+            ${resumeElement.innerHTML}
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      // Wait for content to load then print
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      };
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
   };
 
   const exportToHTML = () => {
     const resumeElement = document.getElementById('resume-content');
     if (resumeElement) {
-      const htmlContent = resumeElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${resumeData.personal.fullName || 'Resume'}</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              font-family: ${resumeData.customization.font}, Arial, sans-serif;
+              background: #f5f5f5;
+            }
+            .resume-content {
+              max-width: 8.5in;
+              margin: 0 auto;
+              background: white;
+              box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              padding: 40px;
+            }
+            @media print {
+              body { background: white; padding: 0; }
+              .resume-content { 
+                box-shadow: none; 
+                margin: 0; 
+                padding: 20px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="resume-content">
+            ${resumeElement.innerHTML}
+          </div>
+        </body>
+        </html>
+      `;
+      
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${resumeData.personal.fullName || 'resume'}.html`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
   };
