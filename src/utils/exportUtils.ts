@@ -1,70 +1,46 @@
-
 import { ResumeData } from '@/types/resume';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export const exportToPDF = async (resumeData: ResumeData) => {
   try {
     const resumeElement = document.getElementById('resume-content');
-    if (!resumeElement) return;
+    if (!resumeElement) {
+      console.error('Resume content element not found');
+      return;
+    }
 
-    // Create a canvas to render the HTML content
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    // Create canvas from the resume element
+    const canvas = await html2canvas(resumeElement, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      width: 816, // 8.5 inches at 96 DPI
+      height: 1056, // 11 inches at 96 DPI
+    });
 
-    // Set canvas size for standard letter size (8.5 x 11 inches at 96 DPI)
-    canvas.width = 816; // 8.5 * 96
-    canvas.height = 1056; // 11 * 96
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: 'letter'
+    });
 
-    // Create an image from the resume content
-    const resumeClone = resumeElement.cloneNode(true) as HTMLElement;
-    resumeClone.style.width = '816px';
-    resumeClone.style.height = 'auto';
-    resumeClone.style.backgroundColor = 'white';
-    resumeClone.style.padding = '40px';
-    resumeClone.style.fontFamily = resumeData.customization.font;
+    const imgData = canvas.toDataURL('image/png');
+    const imgWidth = 612; // 8.5 inches in points
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    // Create a data URL from the HTML
-    const data = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="816" height="1056">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml">
-            ${resumeClone.outerHTML}
-          </div>
-        </foreignObject>
-      </svg>
-    `;
-
-    const blob = new Blob([data], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
     
-    const img = new Image();
-    img.onload = () => {
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      // Convert canvas to PDF-like download
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${resumeData.personal.fullName || 'resume'}.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }
-      }, 'image/png');
-      
-      URL.revokeObjectURL(url);
-    };
+    // Download the PDF
+    const fileName = `${resumeData.personal.fullName || 'resume'}.pdf`;
+    pdf.save(fileName);
     
-    img.src = url;
   } catch (error) {
     console.error('Error generating PDF:', error);
-    // Fallback to HTML download
+    // Fallback to HTML download if PDF generation fails
     exportToHTML(resumeData);
   }
 };
